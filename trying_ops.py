@@ -43,13 +43,24 @@ class Sigmoid(Function): # 1/(1+e^-x)
         # should use self.ret
         # x = x.e(UnaryOps.NEG)
         # exponentiate
-        x = x.e(BinaryOps.DIV, x.const(-math.log(2)))
-        x = x.e(UnaryOps.EXP2)
+        self.res = x.e(BinaryOps.DIV, x.const(-math.log(2)))
+        self.res = self.res.e(UnaryOps.EXP2)
         # add 1
-        x = x.e(BinaryOps.ADD, x.const(1))
+        self.res = self.res.e(BinaryOps.ADD, x.const(1))
         # reciprocal
-        x = x.e(UnaryOps.RECIP)
-        return x
+        self.res = self.res.e(UnaryOps.RECIP)
+        return self.res
+    
+    # sigmoid * (1 - sigmoid)
+    # self.res = sigmoid
+    def backward(self, grad_output: LazyBuffer) -> LazyBuffer:
+        # (1 - sigmoid)
+        ret = self.res.const(1).e(BinaryOps.SUB, self.res)
+        # sigmoid *
+        ret = ret.e(BinaryOps.MUL, self.res)
+        # multiply grad_output by derivative
+        ret = ret.e(BinaryOps.MUL, grad_output)
+        return ret
 
 print(x._np)
 print(Sigmoid(device=None).forward(x)._np)
@@ -59,11 +70,10 @@ print(Sigmoid(device=None).forward(x)._np)
 # more optimized because you can get rid of negation op
 class Sigmoid2(Function):
   def forward(self, x:LazyBuffer) -> LazyBuffer:
-    self.ret = x.const(1).e(BinaryOps.DIV, 
-                x.const(1).e(
-                BinaryOps.ADD, x.e(
-                BinaryOps.MUL, x.const(-1/math.log(2))).e(
-                UnaryOps.EXP2)))
+    self.ret = x.const(1).e(BinaryOps.DIV, x.const(1).e(BinaryOps.ADD, x.e(BinaryOps.MUL, x.const(-1/math.log(2))).e(UnaryOps.EXP2)))
     return self.ret
+
+  def backward(self, grad_output:LazyBuffer) -> LazyBuffer:
+    return self.ret.e(BinaryOps.MUL, self.ret.const(1).e(BinaryOps.SUB, self.ret)).e(BinaryOps.MUL, grad_output)
   
-print(Sigmoid2(device=None).forward(x)._np)
+# print(Sigmoid2(device=None).forward(x)._np)ß
