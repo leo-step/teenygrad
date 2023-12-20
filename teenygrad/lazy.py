@@ -48,6 +48,7 @@ class LazyBuffer:
     elif op == UnaryOps.LOG2: ret = np.log2(self._np)
     elif op == UnaryOps.SIN: ret = np.sin(self._np)
     elif op == UnaryOps.SQRT: ret = np.sqrt(self._np)
+    elif op == UnaryOps.RECIP: ret = np.reciprocal(self._np)
     elif op == BinaryOps.ADD: ret = self._np + srcs[0]._np
     elif op == BinaryOps.SUB: ret = self._np - srcs[0]._np
     elif op == BinaryOps.MUL: ret = self._np * srcs[0]._np
